@@ -1,0 +1,20 @@
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+/**/.keep
+
+.env
+.env.*
+
+# Mac files and IDE
+/.idea/
+.DS_Store
+
+# Test coverage
+/coverage/
+
+# Rubocop
+.rubocop-https*
