@@ -13,10 +13,10 @@ module Railbox
           if record.status == 'in_progress'
             record.attempts += 1
 
-            if record.attempts > Railbox.configuration.max_attempts
+            if record.attempts >= Railbox.configuration.max_attempts
               record.status = 'failed'
             else
-              record.retry_at = Railbox.configuration.retry_strategy[record.attempts - 1].from_now
+              record.retry_at = (Railbox.configuration.retry_strategy[record.attempts - 1] || Railbox.configuration.retry_strategy.last).from_now
             end
           end
 

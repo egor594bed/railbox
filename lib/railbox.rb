@@ -16,7 +16,7 @@ require_relative 'railbox/queue/base_queue'
 require_relative 'railbox/queue/http_queue'
 require_relative 'railbox/queue/handling_queue'
 
-require_relative 'railbox/handler/base_handler'
+require_relative 'railbox/handler/handler'
 
 require_relative 'railbox/processors/handler_processor'
 require_relative 'railbox/processors/http_processor'

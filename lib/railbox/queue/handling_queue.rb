@@ -20,7 +20,7 @@ module Railbox
     # A ValidationError is raised if the given options are invalid (for example, missing class, method, or incorrect body format).
     #
     class HandlingQueue < BaseQueue
-      OPTIONS = %i[headers query entity_type entity_id meta].freeze
+      OPTIONS = %i[headers query relative_entity meta].freeze
 
       class << self
         # Enqueues a class method call operation for asynchronous processing via the transactional outbox.
@@ -49,13 +49,11 @@ module Railbox
 
         private
 
-        def validate_options(service, method, body, **opts)
+        def validate_options(service, method, body, **_)
           raise ValidationError, "Service #{service} is not present" unless service.present?
           raise ValidationError, "Service class #{service} is not defined" unless Object.const_defined?(service)
           raise ValidationError, "Method #{method} for class #{service} is not defined" unless Object.const_get(service).respond_to?(method)
           raise ValidationError, 'Body must be a Hash' unless body.is_a?(Hash)
-
-          raise ValidationError, "Model #{opts[:entity_type]} is not defined" unless Object.const_defined?(opts[:entity_type]) if opts[:entity_type].present?
         end
       end
     end

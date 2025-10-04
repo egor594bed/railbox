@@ -32,11 +32,24 @@ module Railbox
 
       def grouped_records
         sql = <<-SQL.squish
-          SELECT *
-          FROM transactional_outboxes
-          WHERE status = 'in_progress'
-            AND (retry_at IS NULL OR retry_at <= NOW())
-          ORDER BY created_at
+          SELECT t.*
+          FROM transactional_outboxes t
+          WHERE t.status = 'in_progress'
+            AND (t.retry_at IS NULL OR t.retry_at <= NOW())
+            AND NOT EXISTS (
+              SELECT 1
+              FROM transactional_outboxes f
+              WHERE f.status = 'failed'
+                AND (
+                  (t.action_data ? 'group' AND (f.action_data->>'group') = (t.action_data->>'group'))
+                  OR (
+                    (NOT (t.action_data ? 'group') OR (t.action_data->>'group') IS NULL)
+                    AND f.entity_type = t.entity_type
+                    AND f.entity_id   = t.entity_id
+                  )
+                )
+            )
+          ORDER BY t.created_at
         SQL
 
         records = Railbox::TransactionalOutbox.find_by_sql(sql)

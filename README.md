@@ -32,16 +32,13 @@ rails db:migrate
 
 ### Enqueue a Service Class Method (Handler)
 ```
-ruby
-Railbox::HandlingQueue.enqueue(
-service:     "MyService",
-method:      "perform_action",  # Defaults to 'create'
-body:        { foo: "bar" },
-headers:     { "key" => "value" },
-query:       { page: 2 },
-entity_type: "User",
-entity_id:   777,
-meta:        { request_id: "uuid" }
+MyApiHandler.enqueue(
+    method:          "perform_action",  # Defaults to 'create'
+    body:            { foo: "bar" },
+    headers:         { "key" => "value" },
+    query:           { page: 2 },
+    relative_entity: User.last, # Active record entity
+    meta:            { request_id: "uuid" }
 )
 ```
 - **Validation:** Raises `ValidationError` for unknown class/method or bad arguments.
@@ -50,14 +47,13 @@ meta:        { request_id: "uuid" }
 
 ### Enqueue an HTTP Request
 ```
-ruby
 Railbox::HttpQueue.enqueue(
-url:     "https://example.com/api",
-method:  :post,  # :get, :put, :patch, :delete also supported
-body:    { data: 1 },
-headers: { "Authorization" => "Bearer ..." },
-query:   { foo: "bar" },
-meta:    { correlation_id: "123" }
+    url:     "https://example.com/api",
+    method:  :post,  # :get, :put, :patch, :delete also supported
+    body:    { data: 1 },
+    headers: { "Authorization" => "Bearer ..." },
+    query:   { foo: "bar" },
+    meta:    { correlation_id: "123" }
 )
 ```
 - **Validation:** Raises `ValidationError` for invalid URL, method, or body.
@@ -88,13 +84,15 @@ A **Handler** is your service class that Railbox will invoke from an outbox reco
 
 You can create your own handler class and specify it when enqueuing a task. For example, the handler can make an HTTP request and save part of the response to an associated entity:
 ```
-class MyApiHandler < Railbox::BaseHandler
+class MyApiHandler
     require 'net/http'
     require 'json'
+    
+    include Railbox::Handler
 
     def self.create
-    # Get the associated record, e.g., a user
-    record = outbox_entity.relative_entity
+        # Get the associated record, e.g., a user
+        record = outbox_entity.relative_entity
     
         # Make a request to an external API
         uri = URI("https://example.com/api/data")
@@ -106,16 +104,14 @@ class MyApiHandler < Railbox::BaseHandler
     end
 end
 ```
-When enqueuing a task, specify the name of your handler in the `service` parameter:
+To add a task to the queue, simply call the `enqueue` method on your handler class with the necessary parameters.
 ```
-Railbox::HandlingQueue.enqueue(
-    service:     "MyApiHandler",
+MyApiHandler.enqueue(
     method:      "create",
-    entity_type: "User",
-    entity_id:   42
+    body: {"key": "value"}
+    relative_entity: User.last
 )
 ```
-Railbox will automatically call your handler and pass the necessary parameters for asynchronous execution. This approach makes it easy to extend event handling and organize integrations with external systems.
 
 ---
 
@@ -130,7 +126,7 @@ Railbox will automatically call your handler and pass the necessary parameters f
 
 ## Requirements
 
-- Ruby >= 3.4
+- Ruby >= 3.0
 - Rails 7+
 - PostgreSQL (recommended for advisory locking)
 
