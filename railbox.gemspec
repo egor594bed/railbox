@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 3.0.0'
 
-  spec.files         = Dir['lib/**/*.rb']
+  spec.files         = Dir['lib/**/*']
   spec.require_paths = ['lib']
 
   spec.metadata['homepage_uri']          = spec.homepage
