@@ -97,7 +97,7 @@ class MyApiHandler
         record = outbox_entity.relative_entity
     
         # Make a request to an external API
-        MyRequestManager.fetch(body: outbox_entity.body, outbox_entity.headers)
+        MyRequestManager.fetch(body: outbox_entity.body, headers: outbox_entity.headers)
     
         # Save a part of the response to the related entity
         record.update_column(:external_code, data["external_code"])
