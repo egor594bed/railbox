@@ -4,13 +4,16 @@ module Railbox
       class << self
 
         def process(record)
-          action_data = record.action_data.deep_symbolize_keys!
+          action_data = record.action_data
 
           Railbox::HttpClient::Faraday.request(action_data[:method_name],
                                                action_data[:url],
                                                record.query,
                                                record.body,
                                                record.headers)
+        end
+
+        def on_failure(record)
         end
       end
     end

@@ -12,11 +12,7 @@ module Railbox
             group.each do |record|
               process_record(record)
             rescue => e
-              TransactionalOutboxMutator.update(record, {failure_reasons: record.failure_reasons << { message: e.message, backtrace: e.backtrace&.take(3), at: DateTime.current}})
-              raise e if record.in_group? || record.action_type == 'handler'
-
-              Rails.logger.error("RailboxWorker error: #{e.message}\n #{e.backtrace&.take(3)&.join("\n")}")
-
+              on_failure(e, record)
               next
             end
           rescue => e
@@ -71,22 +67,33 @@ module Railbox
           all_group_records = scope.order(:created_at).to_a
 
           group_records if all_group_records.first&.id.in?(group_records.map(&:id))
-        end.compact.reject { |_k, v| v.blank? }
+        end.compact_blank
       end
 
       def process_record(record)
         Rails.logger.info("Start process with transactional outbox ID #{record.id}")
-        processor = PROCESSORS[record.action_type]
-
-        if processor
-          processor.process(record)
-        else
-          raise Railbox::QueueError, "Unknown action_type=#{record.action_type} for outbox #{record.id}"
-        end
+        take_processor(record).process(record)
 
         TransactionalOutboxMutator.update(record, {status: 'completed'})
 
         Rails.logger.info("Finish process with transactional outbox ID #{record.id}")
+      end
+
+      def on_failure(error, record)
+        record = TransactionalOutboxMutator.update(record, {failure_reasons: record.failure_reasons << {message: error.message, backtrace: error.backtrace&.take(3), at: DateTime.current}})
+        take_processor(record).on_failure(record) if record.failed?
+
+        raise error if record.in_group? || record.action_type == 'handler'
+
+        Rails.logger.error("RailboxWorker error: #{error.message}\n #{error.backtrace&.take(3)&.join("\n")}")
+      end
+
+      def take_processor(record)
+        processor = PROCESSORS[record.action_type]
+
+        raise Railbox::QueueError, "Unknown action_type=#{record.action_type} for outbox #{record.id}" unless processor
+
+        processor
       end
     end
   end

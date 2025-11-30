@@ -10,7 +10,7 @@ module Railbox
         def update(record, attributes)
           record.assign_attributes(attributes)
 
-          if record.status == 'in_progress'
+          if record.in_progress?
             record.attempts += 1
 
             if record.attempts >= Railbox.configuration.max_attempts

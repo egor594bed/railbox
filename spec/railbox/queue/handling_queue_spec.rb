@@ -26,7 +26,7 @@ RSpec.describe Railbox::HandlingQueue do
 
       record = Railbox::TransactionalOutbox.last
       expect(record.action_type).to eq('handler')
-      expect(record.action_data).to eq({'class_name' => service_name, 'method_name' => 'perform_action'})
+      expect(record.action_data).to eq({ class_name: service_name, method_name: 'perform_action'})
       expect(record.body).to eq(valid_body.stringify_keys)
     end
 
@@ -36,7 +36,7 @@ RSpec.describe Railbox::HandlingQueue do
       }.to change { Railbox::TransactionalOutbox.count }.by(1)
 
       record = Railbox::TransactionalOutbox.last
-      expect(record.action_data).to eq({'class_name' => service_name, 'method_name' => 'create'})
+      expect(record.action_data).to eq({class_name: service_name, method_name: 'create'})
     end
 
     it 'raises ValidationError if service name is blank' do

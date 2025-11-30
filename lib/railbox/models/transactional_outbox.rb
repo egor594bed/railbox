@@ -32,6 +32,12 @@ module Railbox
     class TransactionalOutbox < ::ActiveRecord::Base
       belongs_to :relative_entity, polymorphic: true, foreign_key: :entity_id, foreign_type: :entity_type
 
+      enum :status, {in_progress: 'in_progress', failed: 'failed', completed: 'completed'}
+
+      def action_data
+        super&.deep_symbolize_keys || {}
+      end
+
       def in_group?
         group.present? || entity_group.present?
       end

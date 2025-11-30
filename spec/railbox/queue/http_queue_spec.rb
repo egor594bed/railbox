@@ -14,7 +14,7 @@ RSpec.describe Railbox::HttpQueue do
 
       record = Railbox::TransactionalOutbox.last
       expect(record.action_type).to eq('http_request')
-      expect(record.action_data).to eq({'url' => valid_url, 'method_name' => valid_method.to_s})
+      expect(record.action_data).to eq({url: valid_url, method_name: valid_method.to_s})
       expect(record.body).to eq(valid_body.stringify_keys)
       expect(record.headers).to eq(valid_headers.stringify_keys)
     end

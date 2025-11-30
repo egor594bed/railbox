@@ -17,7 +17,7 @@
 ## Installation
 
 Add to your Gemfile:
-```
+```ruby
 gem "railbox"
 ```
 Then install and set up the database table:
@@ -31,7 +31,7 @@ rails db:migrate
 ## Usage
 
 ### Enqueue a Service Class Method (Handler)
-```
+```ruby
 MyApiHandler.enqueue(
     method:          "perform_action",  # Defaults to 'create'
     body:            { foo: "bar" },
@@ -41,12 +41,14 @@ MyApiHandler.enqueue(
     meta:            { request_id: "uuid" }
 )
 ```
+All attributes are optional.
+
 - **Validation:** Raises `ValidationError` for unknown class/method or bad arguments.
 
 ---
 
 ### Enqueue an HTTP Request
-```
+```ruby
 Railbox::HttpQueue.enqueue(
     url:     "https://example.com/api",
     method:  :post,  # :get, :put, :patch, :delete also supported
@@ -63,7 +65,7 @@ Railbox::HttpQueue.enqueue(
 ### Processing the Queue
 
 Run the background worker to process pending outbox entries:
-```
+```ruby
 Railbox::Workers::ProcessQueueWorker.perform_later
 ```
 - Safely processes queued actions.
@@ -83,7 +85,7 @@ A **Handler** is your service class that Railbox will invoke from an outbox reco
 #### Custom Handler Example
 
 You can create your own handler class and specify it when enqueuing a task. For example, the handler can make an HTTP request and save part of the response to an associated entity:
-```
+```ruby
 class MyApiHandler
     require 'net/http'
     require 'json'
@@ -95,22 +97,30 @@ class MyApiHandler
         record = outbox_entity.relative_entity
     
         # Make a request to an external API
-        uri = URI("https://example.com/api/data")
-        response = Net::HTTP.get(uri)
-        data = JSON.parse(response)
+        MyRequestManager.fetch(body: outbox_entity.body, outbox_entity.headers)
     
         # Save a part of the response to the related entity
         record.update_column(:external_code, data["external_code"])
     end
 end
 ```
-To add a task to the queue, simply call the `enqueue` method on your handler class with the necessary parameters.
-```
-MyApiHandler.enqueue(
-    method:      "create",
-    body: {"key": "value"}
-    relative_entity: User.last
-)
+
+### Handling failed transactions
+
+You can add an `on_failure` class method to your handler:
+
+```ruby
+class MyApiHandler
+  include Railbox::Handler
+
+  def self.create
+    ...
+  end
+
+  def self.on_failure
+    MyTelegramNotifier.send(outbox_entity.failure_reasons)
+  end
+end
 ```
 
 ---
