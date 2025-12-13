@@ -23,7 +23,7 @@ gem "railbox"
 Then install and set up the database table:
 ```
 bundle install
-rails generate railbox:install:migration
+rails generate railbox:install
 rails db:migrate
 ```
 ---
