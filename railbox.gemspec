@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'railbox'
-  spec.version       = '0.1.1'
+  spec.version       = '0.1.2'
   spec.authors       = ['Egor Beresnev']
   spec.email         = ['egor594bed@gmail.com']
   spec.summary       = 'Reliable transactional outbox for background tasks and decoupled processing'
